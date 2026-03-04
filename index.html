@@ -5,10 +5,9 @@
   <title>Auditformulier – Voertuigen & Chauffeurs (Offline versie)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Libraries voor PDF-export -->
+  <!-- Libraries voor PDF-export (zonder integrity, in juiste volgorde) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     body { font-family: Arial, sans-serif; margin: 0; background:#f3f3f3; }
@@ -45,9 +44,9 @@
 
     textarea { min-height:80px; }
 
-    .vehicle-container { display:flex; gap:20px; }
+    .vehicle-container { display:flex; gap:20px; flex-wrap:wrap; }
     .vehicle-card {
-      flex:1;
+      flex:1 1 300px;
       background:#fafafa;
       border:1px solid #ddd;
       border-radius:8px;
@@ -83,16 +82,17 @@
       padding-bottom:10px;
     }
 
-    /* Handtekening canvas FIX */
+    /* Handtekening canvas */
     #signature {
       background:#fff;
       border:2px solid #ccc;
       border-radius:8px;
-      width:600px;     /* VISUEEL */
-      height:180px;    /* VISUEEL */
+      width:600px;     /* visueel */
+      height:180px;    /* visueel */
       display:block;
       margin-bottom:10px;
       touch-action:none;
+      max-width:100%;
     }
 
     .actions {
@@ -110,6 +110,37 @@
 
     /* (Optioneel) nette rand om PDF-gebied */
     /* #formContent { border: 1px dashed #ddd; padding: 12px; } */
+
+    /* Foto preview tiles */
+    #photoPreviewContainer > div {
+      position: relative;
+      width: 200px;
+      flex: 0 0 auto;
+    }
+    #photoPreviewContainer img {
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .remove-photo-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #d32f2f;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justifyContent: center;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      touch-action: manipulation;
+    }
   </style>
 </head>
 
@@ -127,13 +158,13 @@
     <legend>Algemene gegevens</legend>
 
     <label>Datum audit</label>
-    <input type="date">
+    <input type="date" id="auditDate">
 
     <label>Locatie</label>
-    <input type="text">
+    <input type="text" id="location">
 
     <label>Auditeurs</label>
-    <input type="text" placeholder="Naam 1, Naam 2">
+    <input type="text" id="auditors" placeholder="Naam 1, Naam 2">
   </fieldset>
 
   <!-- VOERTUIGEN -->
@@ -191,25 +222,25 @@
 
     <div class="control-row">
       <div>Werkt volgens onze werkinstructies</div>
-      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
-      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
-      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
       <input class="control-input">
     </div>
 
     <div class="control-row">
       <div>Toont veilig werkgedrag</div>
-      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
-      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
-      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
       <input class="control-input">
     </div>
 
     <div class="control-row">
       <div>Weet wat hij moet doen</div>
-      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
-      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
-      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
       <input class="control-input">
     </div>
 
@@ -304,33 +335,30 @@
     <legend>Bevindingen & acties</legend>
 
     <label>Belangrijkste bevindingen</label>
-    <textarea></textarea>
+    <textarea id="findings"></textarea>
 
     <label>Corrigerende acties nodig?</label>
-    <select>
+    <select id="actionsNeeded">
       <option value="">— kies —</option>
       <option>Ja</option>
       <option>Nee</option>
     </select>
 
     <label>Zo ja, omschrijving actie & verantwoordelijke</label>
-    <textarea></textarea>
+    <textarea id="actionDesc"></textarea>
   </fieldset>
 
-<label>Foto's toevoegen (meerdere mogelijk)</label>
-<input type="file" id="photoInput" accept="image/*" capture="environment" multiple>
+  <label>Foto's toevoegen (meerdere mogelijk)</label>
+  <input type="file" id="photoInput" accept="image/*" capture="environment" multiple>
 
-<div id="photoPreviewContainer" 
-     style="margin-top:15px; display:flex; flex-wrap:wrap; gap:15px;">
-</div>
-
+  <div id="photoPreviewContainer" style="margin-top:15px; display:flex; flex-wrap:wrap; gap:15px;"></div>
 
   <!-- EINDBEOORDELING -->
   <fieldset>
     <legend>Eindbeoordeling audit</legend>
 
     <label>Algemene beoordeling</label>
-    <select>
+    <select id="overall">
       <option value="">— kies —</option>
       <option>Goed</option>
       <option>Voldoende</option>
@@ -344,248 +372,118 @@
     </div>
 
     <label>Datum</label>
-    <input type="date">
+    <input type="date" id="finalDate">
   </fieldset>
 
 </form>
 
 <div class="actions">
-  <button onclick="downloadPDF()">Download PDF</button>
+  <button id="downloadBtn" onclick="downloadPDF()">Download PDF</button>
 </div>
 
 </main>
 
+<!-- ====== Scriptsectie (laatste in body) ====== -->
 <script>
-/* -------------------------------------------
-   HANDTEKENING CANVAS (MET FIX)
-------------------------------------------- */
-const canvas = document.getElementById("signature");
-const ctx = canvas.getContext("2d");
+/* -----------------------------
+   HANDTEKENING CANVAS
+------------------------------*/
+const signatureCanvas = document.getElementById("signature");
+const sigCtx = signatureCanvas.getContext("2d");
 
-/* 1:1 interne resolutie = visuele resolutie */
-canvas.width = 600;
-canvas.height = 180;
+// Interne resolutie gelijk aan visuele resolutie
+signatureCanvas.width = 600;
+signatureCanvas.height = 180;
 
-ctx.lineWidth = 2.5;
-ctx.lineCap = "round";
-ctx.strokeStyle = "black";
+sigCtx.lineWidth = 2.5;
+sigCtx.lineCap = "round";
+sigCtx.strokeStyle = "black";
 
 let drawing = false;
 
-function getPos(e) {
-  const rect = canvas.getBoundingClientRect();
-  return {
-    x: (e.clientX || (e.touches && e.touches[0].clientX) || 0) - rect.left,
-    y: (e.clientY || (e.touches && e.touches[0].clientY) || 0) - rect.top
-  };
+function getSigPos(e) {
+  const rect = signatureCanvas.getBoundingClientRect();
+  const cx = (e.clientX || (e.touches && e.touches[0].clientX) || 0) - rect.left;
+  const cy = (e.clientY || (e.touches && e.touches[0].clientY) || 0) - rect.top;
+  return { x: cx, y: cy };
 }
 
-canvas.addEventListener("mousedown", e => {
+signatureCanvas.addEventListener("mousedown", e => {
   drawing = true;
-  const p = getPos(e);
-  ctx.beginPath();
-  ctx.moveTo(p.x, p.y);
+  const p = getSigPos(e);
+  sigCtx.beginPath();
+  sigCtx.moveTo(p.x, p.y);
 });
-canvas.addEventListener("mouseup", () => drawing = false);
-canvas.addEventListener("mouseleave", () => drawing = false);
+signatureCanvas.addEventListener("mouseup", () => drawing = false);
+signatureCanvas.addEventListener("mouseleave", () => drawing = false);
 
-canvas.addEventListener("mousemove", e => {
+signatureCanvas.addEventListener("mousemove", e => {
   if (!drawing) return;
-  const p = getPos(e);
-  ctx.lineTo(p.x, p.y);
-  ctx.stroke();
+  const p = getSigPos(e);
+  sigCtx.lineTo(p.x, p.y);
+  sigCtx.stroke();
 });
 
-/* Touch events */
-canvas.addEventListener("touchstart", e => {
+// Touch
+signatureCanvas.addEventListener("touchstart", e => {
   drawing = true;
-  const p = getPos(e);
-  ctx.beginPath();
-  ctx.moveTo(p.x, p.y);
+  const p = getSigPos(e);
+  sigCtx.beginPath();
+  sigCtx.moveTo(p.x, p.y);
   e.preventDefault();
 });
-canvas.addEventListener("touchmove", e => {
+signatureCanvas.addEventListener("touchmove", e => {
   if (!drawing) return;
-  const p = getPos(e);
-  ctx.lineTo(p.x, p.y);
-  ctx.stroke();
+  const p = getSigPos(e);
+  sigCtx.lineTo(p.x, p.y);
+  sigCtx.stroke();
   e.preventDefault();
 });
-canvas.addEventListener("touchend", () => drawing = false);
+signatureCanvas.addEventListener("touchend", () => drawing = false);
 
-/* WIS FUNCTIE */
 function clearSignature() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  sigCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
 }
 
-/* -------------------------------------------
-   PDF EXPORT – OPTIE A (Altijd "Opslaan als…")
-   - Probeert eerst File System Access API (Chrome/Edge)
-   - Valt terug op jsPDF.save() (Safari/Firefox)
-------------------------------------------- */
-<script>
-async function downloadPDF() {
-  const { jsPDF } = window.jspdf;
-
-  const content = document.getElementById("formContent");
-
-  // Render formulier naar canvas
-  const renderCanvas = await html2canvas(content, {
-    scale: 2,
-    backgroundColor: "#fff"
-  });
-
-  const imgData = renderCanvas.toDataURL("image/png");
-  const pdf = new jsPDF("p", "mm", "a4");
-
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-
-  const imgWidth = pageWidth;
-  const imgHeight = renderCanvas.height * (imgWidth / renderCanvas.width);
-
-  let heightLeft = imgHeight;
-  let position = 0;
-
-  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-  heightLeft -= pageHeight;
-
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
-    pdf.addPage();
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-  }
-
-  // PDF naar Blob
-  const pdfBlob = pdf.output("blob");
-
-  // Base64 converteren
-  const base64data = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(pdfBlob);
-  });
-
-  // Flow URL
-  const flowUrl = "https://default973326dfc9da42d3b7d68941eaadce.c4.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/d043202f6121498fb46f869033865031/triggers/manual/paths/invoke?api-version=1";
-
-  // Payload met unieke bestandsnaam
-  const payload = {
-    fileName: "audit_" + new Date().toISOString().replace(/[:.]/g, "-") + ".pdf",
-    fileContent: base64data
-  };
-
-  try {
-    // Belangrijk: text/plain zorgt dat er GEEN preflight OPTIONS komt
-    const response = await fetch(flowUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=UTF-8"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      alert("❌ Fout bij opslaan in SharePoint");
-      return;
-    }
-
-    const data = await response.json();
-    alert("✅ PDF succesvol opgeslagen");
-
-    // Eventueel: downloadlink tonen als Flow hem meegeeft
-    if (data.webUrl) {
-      const openIt = confirm("Wil je de opgeslagen PDF openen?");
-      if (openIt) window.open(data.webUrl, "_blank");
-    }
-
-  } catch (error) {
-    console.error(error);
-    alert("❌ Upload mislukt: " + error.message);
-  }
-}
-</script>
-
-
-<script>
+/* -----------------------------
+   FOTO PREVIEW (met verkleinen)
+------------------------------*/
 const photoInput = document.getElementById("photoInput");
 const previewContainer = document.getElementById("photoPreviewContainer");
 
 photoInput.addEventListener("change", function () {
-
   const files = Array.from(this.files);
-
   files.forEach(file => {
     if (!file.type.startsWith("image/")) return;
 
     const reader = new FileReader();
-
     reader.onload = function (e) {
       const img = new Image();
-
       img.onload = function () {
-
-        // ---- Automatisch verkleinen ----
+        // Verkleinen
         const maxSize = 1200;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxSize || height > maxSize) {
-          if (width > height) {
-            height *= maxSize / width;
-            width = maxSize;
-          } else {
-            width *= maxSize / height;
-            height = maxSize;
-          }
+        let w = img.width;
+        let h = img.height;
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h *= maxSize / w; w = maxSize; }
+          else { w *= maxSize / h; h = maxSize; }
         }
 
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        const cctx = c.getContext("2d");
+        cctx.drawImage(img, 0, 0, w, h);
 
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
+        const resizedDataUrl = c.toDataURL("image/jpeg", 0.8);
 
-        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
-
-        // ---- Wrapper voor foto + knop ----
         const wrapper = document.createElement("div");
-        wrapper.style.position = "relative";
-wrapper.style.width = "200px";
-wrapper.style.flex = "0 0 auto";
-
         const previewImg = document.createElement("img");
         previewImg.src = resizedDataUrl;
-        previewImg.style.width = "100%";
-        previewImg.style.borderRadius = "8px";
-        previewImg.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
 
-        // ---- Verwijderknop ----
-       const removeBtn = document.createElement("button");
-removeBtn.innerHTML = "🗑";
-removeBtn.type = "button";
-
-removeBtn.style.position = "absolute";
-removeBtn.style.top = "8px";
-removeBtn.style.right = "8px";
-removeBtn.style.background = "#d32f2f";
-removeBtn.style.color = "white";
-removeBtn.style.border = "none";
-removeBtn.style.borderRadius = "50%";
-removeBtn.style.width = "40px";
-removeBtn.style.height = "40px";
-removeBtn.style.fontSize = "18px";
-removeBtn.style.display = "flex";
-removeBtn.style.alignItems = "center";
-removeBtn.style.justifyContent = "center";
-removeBtn.style.cursor = "pointer";
-removeBtn.style.zIndex = "10";
-removeBtn.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-removeBtn.style.touchAction = "manipulation";
-
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "remove-photo-btn";
+        removeBtn.type = "button";
+        removeBtn.textContent = "🗑";
         removeBtn.addEventListener("click", function () {
           wrapper.remove();
         });
@@ -594,16 +492,112 @@ removeBtn.style.touchAction = "manipulation";
         wrapper.appendChild(removeBtn);
         previewContainer.appendChild(wrapper);
       };
-
       img.src = e.target.result;
     };
-
     reader.readAsDataURL(file);
   });
 
-  // reset file input zodat je opnieuw dezelfde foto kan selecteren
+  // Reset zodat je dezelfde foto opnieuw kan kiezen
   this.value = "";
 });
+
+/* -----------------------------
+   PDF EXPORT + UPLOAD NAAR FLOW
+------------------------------*/
+async function downloadPDF() {
+  try {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      alert("jsPDF niet geladen - controleer de CDN.");
+      return;
+    }
+    if (typeof html2canvas !== "function") {
+      alert("html2canvas niet geladen - controleer de CDN.");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const content = document.getElementById("formContent");
+    if (!content) {
+      alert("#formContent niet gevonden.");
+      return;
+    }
+
+    // Render formulier naar canvas
+    const renderCanvas = await html2canvas(content, {
+      scale: 2,
+      backgroundColor: "#fff",
+      useCORS: true
+    });
+
+    const imgData = renderCanvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth;
+    const imgHeight = renderCanvas.height * (imgWidth / renderCanvas.width);
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    // PDF -> Blob -> base64
+    const pdfBlob = pdf.output("blob");
+    const base64data = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(pdfBlob);
+    });
+
+    const btn = document.getElementById("downloadBtn");
+    if (btn) btn.disabled = true;
+
+    // JOUW FLOW-URL (manual invoke, zoals opgegeven)
+    const flowUrl = "https://default973326dfc9da42d3b7d68941eaadce.c4.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/d043202f6121498fb46f869033865031/triggers/manual/paths/invoke?api-version=1";
+
+    const fileName = "audit_" + new Date().toISOString().replace(/[:.]/g, "-") + ".pdf";
+    const payload = { fileName, fileContent: base64data };
+
+    // Belangrijk: text/plain om preflight te vermijden
+    const res = await fetch(flowUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: JSON.stringify(payload)
+    });
+
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    if (!res.ok) {
+      console.error("Flow response status", res.status, data);
+      alert("❌ Fout bij opslaan in SharePoint (status " + res.status + ")");
+      return;
+    }
+
+    alert("✅ PDF opgeslagen" + (data.fileName ? (" als " + data.fileName) : ""));
+
+    if (data.webUrl) {
+      const openIt = confirm("Wil je de opgeslagen PDF openen?");
+      if (openIt) window.open(data.webUrl, "_blank");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("❌ Upload mislukt: " + (err && err.message ? err.message : err));
+  } finally {
+    const btn = document.getElementById("downloadBtn");
+    if (btn) btn.disabled = false;
+  }
+}
 </script>
 
 </body>
