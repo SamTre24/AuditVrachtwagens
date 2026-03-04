@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <title>Auditformulier – Voertuigen & Chauffeurs (Offline versie)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Libraries voor PDF-export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background:#f3f3f3; }
+    header { background:#0E639C; color:white; padding:20px; }
+    main { max-width:1100px; margin:20px auto; background:white; padding:25px; border-radius:10px; }
+
+    fieldset {
+      border:1px solid #ccc;
+      margin-bottom:25px;
+      padding:20px;
+      border-radius:8px;
+    }
+    legend { font-weight:bold; font-size:18px; }
+
+    label {
+      display:block;
+      margin:8px 0 4px;
+      font-weight:600;
+      color:#222;
+    }
+
+    input[type=text],
+    input[type=date],
+    textarea,
+    select {
+      width:100%;
+      padding:10px;
+      border:1px solid #ccc;
+      border-radius:6px;
+      background:white;
+      color:#000;
+      font-size:15px;
+    }
+
+    textarea { min-height:80px; }
+
+    .vehicle-container { display:flex; gap:20px; }
+    .vehicle-card {
+      flex:1;
+      background:#fafafa;
+      border:1px solid #ddd;
+      border-radius:8px;
+      padding:15px;
+    }
+    .vehicle-card strong {
+      display:block;
+      text-align:center;
+      margin-bottom:10px;
+      font-size:16px;
+      text-decoration:underline;
+    }
+
+    /* Controlepunt layout */
+    .control-header,
+    .control-row {
+      display: grid;
+      grid-template-columns: 1.6fr 0.6fr 0.6fr 0.6fr 1.2fr;
+      gap: 15px;
+      padding: 10px 0;
+      align-items: center;
+      font-size:15px;
+    }
+
+    .control-header {
+      border-bottom: 2px solid #444;
+      font-weight:bold;
+      margin-bottom:5px;
+    }
+
+    .control-row {
+      border-bottom:1px solid #e5e5e5;
+      padding-bottom:10px;
+    }
+
+    /* Handtekening canvas FIX */
+    #signature {
+      background:#fff;
+      border:2px solid #ccc;
+      border-radius:8px;
+      width:600px;     /* VISUEEL */
+      height:180px;    /* VISUEEL */
+      display:block;
+      margin-bottom:10px;
+      touch-action:none;
+    }
+
+    .actions {
+      display:flex; gap:10px; flex-wrap:wrap;
+    }
+    button {
+      background:#0E639C;
+      color:white;
+      padding:10px 18px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      margin-top:10px;
+    }
+
+    /* (Optioneel) nette rand om PDF-gebied */
+    /* #formContent { border: 1px dashed #ddd; padding: 12px; } */
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Auditformulier – Voertuigen & Chauffeurs</h1>
+</header>
+
+<main id="formContent">
+
+<form>
+
+  <!-- ALGEMENE GEGEVENS -->
+  <fieldset>
+    <legend>Algemene gegevens</legend>
+
+    <label>Datum audit</label>
+    <input type="date">
+
+    <label>Locatie</label>
+    <input type="text">
+
+    <label>Auditeurs</label>
+    <input type="text" placeholder="Naam 1, Naam 2">
+  </fieldset>
+
+  <!-- VOERTUIGEN -->
+  <fieldset>
+    <legend>Voertuiggegevens (max 3)</legend>
+
+    <div class="vehicle-container">
+
+      <div class="vehicle-card">
+        <strong>Voertuig 1</strong>
+        <label>Laadnummer</label><input type="text">
+        <label>Vervoerder</label><input type="text">
+        <label>Kenteken</label><input type="text">
+        <label>Naam chauffeur</label><input type="text">
+      </div>
+
+      <div class="vehicle-card">
+        <strong>Voertuig 2</strong>
+        <label>Laadnummer</label><input type="text">
+        <label>Vervoerder</label><input type="text">
+        <label>Kenteken</label><input type="text">
+        <label>Naam chauffeur</label><input type="text">
+      </div>
+
+      <div class="vehicle-card">
+        <strong>Voertuig 3</strong>
+        <label>Laadnummer</label><input type="text">
+        <label>Vervoerder</label><input type="text">
+        <label>Kenteken</label><input type="text">
+        <label>Naam chauffeur</label><input type="text">
+      </div>
+
+    </div>
+  </fieldset>
+
+  <!-- SECTIE 1 -->
+  <fieldset>
+    <legend>1. Werkwijze van de chauffeur</legend>
+
+    <div class="control-header">
+      <div>Controlepunt</div>
+      <div>Voertuig 1</div>
+      <div>Voertuig 2</div>
+      <div>Voertuig 3</div>
+      <div>Opmerkingen</div>
+    </div>
+
+    <div class="control-row">
+      <div>Houdt zich aan veiligheidsprocedures</div>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option value="">—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+    <div class="control-row">
+      <div>Werkt volgens onze werkinstructies</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+    <div class="control-row">
+      <div>Toont veilig werkgedrag</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+    <div class="control-row">
+      <div>Weet wat hij moet doen</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+  </fieldset>
+
+  <!-- SECTIE 2 -->
+  <fieldset>
+    <legend>2. Vastzetten van de lading</legend>
+
+    <div class="control-header">
+      <div>Controlepunt</div>
+      <div>Voertuig 1</div>
+      <div>Voertuig 2</div>
+      <div>Voertuig 3</div>
+      <div>Opmerkingen</div>
+    </div>
+
+    <div class="control-row">
+      <div>Goed geladen door verlading</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+    <div class="control-row">
+      <div>Gebruik van antislipmatten</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+    <div class="control-row">
+      <div>Spanmiddelen in goede staat</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+    <div class="control-row">
+      <div>Gebruik van corner protection</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+    <div class="control-row">
+      <div>Lading correct vastgezet</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+  </fieldset>
+
+  <!-- SECTIE 3 -->
+  <fieldset>
+    <legend>3. Gebruik van PBM’s</legend>
+
+    <div class="control-header">
+      <div>Controlepunt</div>
+      <div>Voertuig 1</div>
+      <div>Voertuig 2</div>
+      <div>Voertuig 3</div>
+      <div>Opmerkingen</div>
+    </div>
+
+    <div class="control-row">
+      <div>PBM’s aanwezig</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+    <div class="control-row">
+      <div>Hulpmiddelen in goede staat</div>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <select class="control-select"><option>—</option><option>Ja</option><option>Nee</option></select>
+      <input class="control-input">
+    </div>
+
+  </fieldset>
+
+  <!-- BEVINDINGEN & ACTIES -->
+  <fieldset>
+    <legend>Bevindingen & acties</legend>
+
+    <label>Belangrijkste bevindingen</label>
+    <textarea></textarea>
+
+    <label>Corrigerende acties nodig?</label>
+    <select>
+      <option value="">— kies —</option>
+      <option>Ja</option>
+      <option>Nee</option>
+    </select>
+
+    <label>Zo ja, omschrijving actie & verantwoordelijke</label>
+    <textarea></textarea>
+  </fieldset>
+
+<label>Foto's toevoegen (meerdere mogelijk)</label>
+<input type="file" id="photoInput" accept="image/*" capture="environment" multiple>
+
+<div id="photoPreviewContainer" 
+     style="margin-top:15px; display:flex; flex-wrap:wrap; gap:15px;">
+</div>
+
+
+  <!-- EINDBEOORDELING -->
+  <fieldset>
+    <legend>Eindbeoordeling audit</legend>
+
+    <label>Algemene beoordeling</label>
+    <select>
+      <option value="">— kies —</option>
+      <option>Goed</option>
+      <option>Voldoende</option>
+      <option>Onvoldoende</option>
+    </select>
+
+    <label>Handtekening auditeurs</label>
+    <canvas id="signature"></canvas>
+    <div class="actions">
+      <button type="button" onclick="clearSignature()">Wis handtekening</button>
+    </div>
+
+    <label>Datum</label>
+    <input type="date">
+  </fieldset>
+
+</form>
+
+<div class="actions">
+  <button onclick="downloadPDF()">Download PDF</button>
+</div>
+
+</main>
+
+<script>
+/* -------------------------------------------
+   HANDTEKENING CANVAS (MET FIX)
+------------------------------------------- */
+const canvas = document.getElementById("signature");
+const ctx = canvas.getContext("2d");
+
+/* 1:1 interne resolutie = visuele resolutie */
+canvas.width = 600;
+canvas.height = 180;
+
+ctx.lineWidth = 2.5;
+ctx.lineCap = "round";
+ctx.strokeStyle = "black";
+
+let drawing = false;
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX || (e.touches && e.touches[0].clientX) || 0) - rect.left,
+    y: (e.clientY || (e.touches && e.touches[0].clientY) || 0) - rect.top
+  };
+}
+
+canvas.addEventListener("mousedown", e => {
+  drawing = true;
+  const p = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+});
+canvas.addEventListener("mouseup", () => drawing = false);
+canvas.addEventListener("mouseleave", () => drawing = false);
+
+canvas.addEventListener("mousemove", e => {
+  if (!drawing) return;
+  const p = getPos(e);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+});
+
+/* Touch events */
+canvas.addEventListener("touchstart", e => {
+  drawing = true;
+  const p = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  e.preventDefault();
+});
+canvas.addEventListener("touchmove", e => {
+  if (!drawing) return;
+  const p = getPos(e);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  e.preventDefault();
+});
+canvas.addEventListener("touchend", () => drawing = false);
+
+/* WIS FUNCTIE */
+function clearSignature() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+/* -------------------------------------------
+   PDF EXPORT – OPTIE A (Altijd "Opslaan als…")
+   - Probeert eerst File System Access API (Chrome/Edge)
+   - Valt terug op jsPDF.save() (Safari/Firefox)
+------------------------------------------- */
+<script>
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+
+  const content = document.getElementById("formContent");
+
+  // Render formulier naar canvas
+  const renderCanvas = await html2canvas(content, {
+    scale: 2,
+    backgroundColor: "#fff"
+  });
+
+  const imgData = renderCanvas.toDataURL("image/png");
+  const pdf = new jsPDF("p", "mm", "a4");
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+
+  const imgWidth = pageWidth;
+  const imgHeight = renderCanvas.height * (imgWidth / renderCanvas.width);
+
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+
+  // PDF naar Blob
+  const pdfBlob = pdf.output("blob");
+
+  // Base64 converteren
+  const base64data = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(pdfBlob);
+  });
+
+  // Flow URL
+  const flowUrl = "https://default973326dfc9da42d3b7d68941eaadce.c4.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/d043202f6121498fb46f869033865031/triggers/manual/paths/invoke?api-version=1";
+
+  // Payload met unieke bestandsnaam
+  const payload = {
+    fileName: "audit_" + new Date().toISOString().replace(/[:.]/g, "-") + ".pdf",
+    fileContent: base64data
+  };
+
+  try {
+    // Belangrijk: text/plain zorgt dat er GEEN preflight OPTIONS komt
+    const response = await fetch(flowUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=UTF-8"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      alert("❌ Fout bij opslaan in SharePoint");
+      return;
+    }
+
+    const data = await response.json();
+    alert("✅ PDF succesvol opgeslagen");
+
+    // Eventueel: downloadlink tonen als Flow hem meegeeft
+    if (data.webUrl) {
+      const openIt = confirm("Wil je de opgeslagen PDF openen?");
+      if (openIt) window.open(data.webUrl, "_blank");
+    }
+
+  } catch (error) {
+    console.error(error);
+    alert("❌ Upload mislukt: " + error.message);
+  }
+}
+</script>
+
+
+<script>
+const photoInput = document.getElementById("photoInput");
+const previewContainer = document.getElementById("photoPreviewContainer");
+
+photoInput.addEventListener("change", function () {
+
+  const files = Array.from(this.files);
+
+  files.forEach(file => {
+    if (!file.type.startsWith("image/")) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      const img = new Image();
+
+      img.onload = function () {
+
+        // ---- Automatisch verkleinen ----
+        const maxSize = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxSize || height > maxSize) {
+          if (width > height) {
+            height *= maxSize / width;
+            width = maxSize;
+          } else {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+
+        // ---- Wrapper voor foto + knop ----
+        const wrapper = document.createElement("div");
+        wrapper.style.position = "relative";
+wrapper.style.width = "200px";
+wrapper.style.flex = "0 0 auto";
+
+        const previewImg = document.createElement("img");
+        previewImg.src = resizedDataUrl;
+        previewImg.style.width = "100%";
+        previewImg.style.borderRadius = "8px";
+        previewImg.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+
+        // ---- Verwijderknop ----
+       const removeBtn = document.createElement("button");
+removeBtn.innerHTML = "🗑";
+removeBtn.type = "button";
+
+removeBtn.style.position = "absolute";
+removeBtn.style.top = "8px";
+removeBtn.style.right = "8px";
+removeBtn.style.background = "#d32f2f";
+removeBtn.style.color = "white";
+removeBtn.style.border = "none";
+removeBtn.style.borderRadius = "50%";
+removeBtn.style.width = "40px";
+removeBtn.style.height = "40px";
+removeBtn.style.fontSize = "18px";
+removeBtn.style.display = "flex";
+removeBtn.style.alignItems = "center";
+removeBtn.style.justifyContent = "center";
+removeBtn.style.cursor = "pointer";
+removeBtn.style.zIndex = "10";
+removeBtn.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+removeBtn.style.touchAction = "manipulation";
+
+        removeBtn.addEventListener("click", function () {
+          wrapper.remove();
+        });
+
+        wrapper.appendChild(previewImg);
+        wrapper.appendChild(removeBtn);
+        previewContainer.appendChild(wrapper);
+      };
+
+      img.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  // reset file input zodat je opnieuw dezelfde foto kan selecteren
+  this.value = "";
+});
+</script>
+
+</body>
+</html>
