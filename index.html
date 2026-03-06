@@ -505,100 +505,46 @@ photoInput.addEventListener("change", function () {
    PDF EXPORT + UPLOAD NAAR FLOW
 ------------------------------*/
 async function downloadPDF() {
-  try {
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-      alert("jsPDF niet geladen - controleer de CDN.");
-      return;
-    }
-    if (typeof html2canvas !== "function") {
-      alert("html2canvas niet geladen - controleer de CDN.");
-      return;
-    }
 
-    const { jsPDF } = window.jspdf;
-    const content = document.getElementById("formContent");
-    if (!content) {
-      alert("#formContent niet gevonden.");
-      return;
-    }
+  const { jsPDF } = window.jspdf;
+  const content = document.getElementById("formContent");
 
-    // Render formulier naar canvas
-    const renderCanvas = await html2canvas(content, {
-      scale: 2,
-      backgroundColor: "#fff",
-      useCORS: true
-    });
+  const canvas = await html2canvas(content, {
+    scale: 2,
+    backgroundColor: "#ffffff"
+  });
 
-    const imgData = renderCanvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
+  const imgData = canvas.toDataURL("image/png");
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+  const pdf = new jsPDF("p", "mm", "a4");
 
-    const imgWidth = pageWidth;
-    const imgHeight = renderCanvas.height * (imgWidth / renderCanvas.width);
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
 
-    let heightLeft = imgHeight;
-    let position = 0;
+  const imgWidth = pageWidth;
+  const imgHeight = canvas.height * imgWidth / canvas.width;
 
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
     pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    // PDF -> Blob -> base64
-    const pdfBlob = pdf.output("blob");
-    const base64data = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(pdfBlob);
-    });
-
-    const btn = document.getElementById("downloadBtn");
-    if (btn) btn.disabled = true;
-
-    // JOUW FLOW-URL (manual invoke, zoals opgegeven)
-    const flowUrl = "https://default973326dfc9da42d3b7d68941eaadce.c4.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/d043202f6121498fb46f869033865031/triggers/manual/paths/invoke?api-version=1";
-
-    const fileName = "audit_" + new Date().toISOString().replace(/[:.]/g, "-") + ".pdf";
-    const payload = { fileName, fileContent: base64data };
-
-    // Belangrijk: text/plain om preflight te vermijden
-    const res = await fetch(flowUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=UTF-8" },
-      body: JSON.stringify(payload)
-    });
-
-    let data = {};
-    try { data = await res.json(); } catch (_) {}
-    if (!res.ok) {
-      console.error("Flow response status", res.status, data);
-      alert("❌ Fout bij opslaan in SharePoint (status " + res.status + ")");
-      return;
-    }
-
-    alert("✅ PDF opgeslagen" + (data.fileName ? (" als " + data.fileName) : ""));
-
-    if (data.webUrl) {
-      const openIt = confirm("Wil je de opgeslagen PDF openen?");
-      if (openIt) window.open(data.webUrl, "_blank");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("❌ Upload mislukt: " + (err && err.message ? err.message : err));
-  } finally {
-    const btn = document.getElementById("downloadBtn");
-    if (btn) btn.disabled = false;
   }
+
+  // BESTANDSNAAM MET DATUM
+  const today = new Date().toISOString().slice(0,10);
+  const fileName = "Audit_Vrachtwagens_" + today + ".pdf";
+
+  pdf.save(fileName);
 }
 </script>
 
 </body>
 </html>
+
